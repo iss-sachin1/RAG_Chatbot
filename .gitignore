@@ -40,6 +40,7 @@ yarn-error.log*
 # local test artifacts / obsolete local Chroma data
 /scratch_*
 /chroma_data/
+/chroma_db/
 
 # typescript
 *.tsbuildinfo
