@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Intelligent RAG Assistant</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #273647; /* surface-variant */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #424754; /* outline-variant */
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#2c3a4c",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#adc6ff",
+                        "error-container": "#93000a",
+                        "surface-variant": "#273647",
+                        "on-primary-fixed": "#001a42",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-lowest": "#010f1f",
+                        "outline-variant": "#424754",
+                        "surface": "#051424",
+                        "on-tertiary-fixed": "#131b2e",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#233143",
+                        "on-secondary-fixed": "#111c2d",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "on-surface": "#d4e4fa",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "inverse-surface": "#d4e4fa",
+                        "surface-container-highest": "#273647",
+                        "on-tertiary": "#283044",
+                        "primary-fixed": "#d8e2ff",
+                        "secondary-container": "#3e495d",
+                        "on-secondary": "#263143",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#1c2b3c",
+                        "primary-container": "#4d8eff",
+                        "primary": "#adc6ff",
+                        "surface-dim": "#051424",
+                        "on-primary-container": "#00285d",
+                        "background": "#051424",
+                        "tertiary": "#bec6e0",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "surface-container-low": "#0d1c2d",
+                        "secondary-fixed-dim": "#bcc7de",
+                        "surface-tint": "#adc6ff",
+                        "tertiary-fixed": "#dae2fd",
+                        "secondary": "#bcc7de",
+                        "outline": "#8c909f",
+                        "on-background": "#d4e4fa",
+                        "on-primary": "#002e6a",
+                        "surface-container": "#122131",
+                        "inverse-primary": "#005ac2",
+                        "tertiary-container": "#8990a8",
+                        "on-secondary-container": "#aeb9d0",
+                        "on-tertiary-container": "#22293d",
+                        "secondary-fixed": "#d8e3fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "gutter": "24px",
+                        "max-content-width": "1200px",
+                        "margin-desktop": "32px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-xl": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "label-md": ["JetBrains Mono", "monospace"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "headline-lg-mobile": ["Inter", "sans-serif"],
+                        "label-sm": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex font-body-md overflow-hidden antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- JSON Component: SideNavBar -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 bg-surface-dim border-r border-outline-variant flex flex-col p-gutter z-30 transition-transform duration-300 transform translate-x-0 md:translate-x-0">
+<!-- Header -->
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-xl bg-surface-variant border border-outline-variant overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A clean, modern geometric 3D avatar featuring subtle glowing electric blue accents against a deep charcoal background, exuding professional artificial intelligence identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA56fNmQDajcd8V3bTA-2n3Ltv3DthjscRZC6j0GeNiDCTZVC2sRSBRTnjefOW4TcLPB0bvDhh87JSUfxX0TawNJQYw_gHbzDjfBniU0_wSyQGdSeS-wnCg0mYhbRiuifP-6ArozKHqki-jVnvhMixR0-t5Xakn9zVI78PTw-eY198LTfcaqt4Yc1enm4yIwqkJgFuEydmdMsMJ0bzEWiY5_KfbFhChi3JW2L1RHASy7kvl0Jyv-2IzMlLK3BU6P2rLS1YBpTtcm4lu"/>
+</div>
+<div>
+<div class="font-headline-md text-headline-md font-bold text-primary">Intelligent RAG</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">GPT-4o Professional</div>
+</div>
+</div>
+<!-- CTA -->
+<button class="w-full py-3 px-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-primary-fixed transition-colors shadow-[0_0_15px_rgba(77,142,255,0.15)] mb-8 active:scale-95 duration-150">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+            New Chat
+        </button>
+<!-- Navigation Sections -->
+<nav class="flex-1 overflow-y-auto space-y-6">
+<!-- Section 1: Recent Chats -->
+<div>
+<div class="flex items-center gap-2 px-2 mb-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant" data-icon="history">history</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Recent Chats</span>
+</div>
+<ul class="space-y-1">
+<li>
+<a class="block w-full text-left px-3 py-2 bg-secondary-container text-on-secondary-container rounded-xl font-label-md text-label-md truncate active:scale-95 transition-transform duration-150" href="#">
+                            Q4 Financial Analysis
+                        </a>
+</li>
+<li>
+<a class="block w-full text-left px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-xl font-label-md text-label-md truncate transition-colors duration-200" href="#">
+                            Technical Specs - Project X
+                        </a>
+</li>
+<li>
+<a class="block w-full text-left px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-xl font-label-md text-label-md truncate transition-colors duration-200" href="#">
+                            Marketing Q3 Review
+                        </a>
+</li>
+</ul>
+</div>
+<!-- Section 2: Active Documents -->
+<div>
+<div class="flex items-center gap-2 px-2 mb-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant" data-icon="description">description</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Documents</span>
+</div>
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-2 w-full text-left px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-xl font-label-md text-label-md truncate transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[16px] text-error" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span class="truncate">annual_report_2023.pdf</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-2 w-full text-left px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-xl font-label-md text-label-md truncate transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[16px] text-error" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span class="truncate">product_roadmap.pdf</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Footer -->
+<div class="pt-4 border-t border-outline-variant mt-4 space-y-1">
+<a class="flex items-center gap-3 w-full text-left px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-xl font-label-md text-label-md transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="settings">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 w-full text-left px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-xl font-label-md text-label-md transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help_outline">help_outline</span>
+                Help
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-[280px] flex-1 flex flex-col relative h-screen bg-background">
+<!-- JSON Component: TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-md flex justify-between items-center h-16 px-gutter border-b border-outline-variant sticky top-0 z-20 w-full">
+<div class="font-headline-md text-headline-md font-extrabold text-primary hidden md:block">
+                RAG Assistant
+            </div>
+<nav class="flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm cursor-pointer active:opacity-80" href="#">Models</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-sm text-label-sm cursor-pointer active:opacity-80" href="#">Settings</a>
+</nav>
+<button class="text-primary hover:bg-surface-variant/50 p-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</header>
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto w-full relative">
+<div class="max-w-max-content-width mx-auto p-gutter pb-[180px] flex flex-col gap-8 pt-8">
+<!-- Chat Header -->
+<div class="flex flex-col items-center justify-center text-center mb-4">
+<h1 class="font-headline-xl text-headline-xl text-on-surface mb-4">Q4 Financial Analysis</h1>
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="memory">memory</span>
+                        Model: GPT-4o Professional
+                    </div>
+</div>
+<!-- Conversation Thread -->
+<!-- Assistant Turn -->
+<div class="flex w-full justify-start max-w-4xl mx-auto">
+<div class="flex gap-4 w-full">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest border border-outline-variant flex items-center justify-center flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded-2xl rounded-tl-sm p-5 text-on-surface font-body-md text-body-md shadow-sm">
+                            I've indexed your uploaded documents. What would you like to know about the Q4 performance?
+                        </div>
+</div>
+</div>
+<!-- User Turn -->
+<div class="flex w-full justify-end max-w-4xl mx-auto">
+<div class="flex gap-4 w-full justify-end">
+<div class="bg-primary text-on-primary rounded-2xl rounded-tr-sm p-5 font-body-md text-body-md shadow-sm max-w-[85%]">
+                            What was the net revenue growth compared to Q3?
+                        </div>
+<div class="w-8 h-8 rounded-lg bg-surface-variant border border-outline-variant overflow-hidden flex-shrink-0 mt-1">
+<img class="w-full h-full object-cover" data-alt="A clean, modern geometric 3D avatar featuring subtle glowing electric blue accents against a deep charcoal background, exuding professional artificial intelligence identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY-BvPT4S_xz-7S1J-g2MYW7kZb2DjCjmbk62k6MkI3i8UvGW5ALlrIlFScqtubuGrxzYnnHZmLbcw3caMWl0sk1HYfmTE2-n-eFw-puREAOo0s-sAs_dMfPgPzipuedP5Z_P2YOtiNKRZxb9uFCR-fDR6APWnaTM_raDClvwYC5RcHxsXHogJppDFwf6ddIZ-qJIKur48ulJqZx5Js_I6TpvTlqW0ettv9OLQeXerZ7ozIDR_bWbkKbjc2-ncQ1fhtRlsRY2O7olP"/>
+</div>
+</div>
+</div>
+<!-- Assistant Turn with Citation -->
+<div class="flex w-full justify-start max-w-4xl mx-auto">
+<div class="flex gap-4 w-full">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest border border-outline-variant flex items-center justify-center flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded-2xl rounded-tl-sm p-5 text-on-surface font-body-md text-body-md shadow-sm flex flex-col gap-4 w-full">
+<p class="leading-relaxed">
+                                Based on the provided documents, net revenue grew by <strong class="text-primary font-semibold">12.5%</strong> in Q4 compared to Q3. This growth was driven primarily by strong performance in the enterprise sector and highly successful end-of-year holiday campaigns.
+                            </p>
+<!-- Citations Area -->
+<div class="flex flex-wrap gap-2 pt-2 border-t border-outline-variant/30">
+<span class="text-on-surface-variant font-label-sm text-label-sm py-1 mr-1">Sources:</span>
+<button class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant hover:border-primary/50 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all duration-200 cursor-pointer group">
+<span class="material-symbols-outlined text-[14px] text-error group-hover:text-error/80" data-icon="picture_as_pdf">picture_as_pdf</span>
+                                    Annual Report 2023 (pg 14)
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Fixed Bottom Input Area -->
+<div class="absolute bottom-0 left-0 w-full bg-background/60 backdrop-blur-xl border-t border-outline-variant/30 px-gutter py-6 z-20">
+<div class="max-w-4xl mx-auto relative">
+<!-- Input Container (Glassmorphism) -->
+<div class="bg-surface-container-high/80 border border-outline-variant rounded-2xl flex items-end p-2 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/20 transition-all shadow-[0_-4px_30px_rgba(0,0,0,0.3)] backdrop-blur-md">
+<button class="p-3 text-on-surface-variant hover:text-on-surface rounded-xl hover:bg-surface-variant/50 transition-colors flex-shrink-0 flex items-center justify-center group" title="Attach PDF">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="attach_file">attach_file</span>
+</button>
+<textarea class="flex-1 bg-transparent border-none text-on-surface font-body-md text-body-md resize-none max-h-40 min-h-[52px] py-3 px-2 focus:ring-0 placeholder:text-on-surface-variant/50" placeholder="Message RAG Assistant..." rows="1" style="scrollbar-width: none;"></textarea>
+<button class="p-3 bg-primary text-on-primary rounded-xl hover:bg-primary-fixed transition-colors flex-shrink-0 ml-2 h-12 w-12 flex items-center justify-center shadow-md active:scale-95 duration-150">
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_upward">arrow_upward</span>
+</button>
+</div>
+<!-- Disclaimer -->
+<div class="text-center mt-3 text-on-surface-variant/60 font-label-sm text-label-sm">
+                    AI can make mistakes. Verify critical information in the provided source documents.
+                </div>
+</div>
+</div>
+</main>
+<!-- Auto-resize textarea script -->
+<script>
+        const textarea = document.querySelector('textarea');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
+</body></html>
