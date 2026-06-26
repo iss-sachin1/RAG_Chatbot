@@ -5,10 +5,6 @@ const nextConfig: NextConfig = {
     'pdf-parse',
     'tesseract.js',
     '@napi-rs/canvas',
-    'chromadb',
-    '@chroma-core/default-embed',
-    '@chroma-core/ai-embeddings-common',
-    'onnxruntime-node',
   ],
 };
 
