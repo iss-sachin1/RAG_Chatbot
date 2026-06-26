@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCollection } from '@/lib/chroma';
+import { getIndex } from '@/lib/vectorstore';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { ChatOpenAI } from '@langchain/openai';
 import { FakeListChatModel } from '@langchain/core/utils/testing';
+
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 /**
  * Returns the chat model. Uses NVIDIA-hosted MiniMax-M3 (OpenAI-compatible API)
@@ -39,14 +42,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
     }
 
-    // 1. Retrieve context from ChromaDB
-    const collection = await getCollection();
-    const results = await collection.query({
-      queryTexts: [query],
-      nResults: 3, // Get top 3 chunks
+    // 1. Retrieve context from Upstash Vector. We query by raw text; Upstash
+    //    embeds it server-side using the index's built-in embedding model.
+    const index = getIndex();
+    const results = await index.query({
+      data: query,
+      topK: 3, // Get top 3 chunks
+      includeMetadata: true,
     });
 
-    const documents = results.documents?.[0] || [];
+    const documents = results
+      .map((r) => (r.metadata?.text as string) ?? '')
+      .filter((t) => t.length > 0);
     const context = documents.join('\n\n---\n\n');
 
     // 2. Setup LangChain prompt

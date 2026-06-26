@@ -15,7 +15,7 @@ export async function extractText(buffer: Buffer, mimeType: string): Promise<str
   } else if (mimeType === 'application/pdf') {
     // Parse PDF
     console.log('Parsing PDF with LangChain WebPDFLoader...');
-    const blob = new Blob([buffer], { type: 'application/pdf' });
+    const blob = new Blob([new Uint8Array(buffer)], { type: 'application/pdf' });
     const loader = new WebPDFLoader(blob, { splitPages: false });
     const docs = await loader.load();
     
