@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"query\":\"What is this document about?\"}')",
+      "Bash(rm -f scratch_test.pdf scratch_make_pdf.py)",
+      "Bash(curl -s -m 3 http://localhost:3000 -o /dev/null -w \"Next.js \\(web app\\): HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s -m 3 http://localhost:8000/api/v2/heartbeat -o /dev/null -w \"ChromaDB:         HTTP %{http_code}\\\\n\")",
+      "Bash(ls node_modules/@langchain/)",
+      "Bash(ls node_modules/openai)",
+      "Bash(ls node_modules/@langchain/openai)",
+      "Bash(curl -s -m 90 -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"query\":\"How tall is the Eiffel Tower and where is it?\"}')"
+    ]
+  }
+}
