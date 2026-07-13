@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code local settings
+.claude/
+
 # local test artifacts / obsolete local Chroma data
 /scratch_*
 /chroma_data/
