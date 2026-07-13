@@ -9,6 +9,25 @@ type Message = {
   sources?: string[];
 };
 
+// Strips Markdown syntax so assistant answers render as clean plain text.
+function cleanMarkdown(text: string): string {
+  return text
+    // Headings: "## Title" -> "Title"
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    // Bold/italic: **x**, __x__, *x*, _x_ -> x
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+    // Inline code / code fences: remove backticks
+    .replace(/`{1,3}/g, '')
+    // Bullet markers: "- item" / "* item" / "+ item" -> "• item"
+    .replace(/^\s{0,3}[-*+]\s+/gm, '• ')
+    // Blockquote markers
+    .replace(/^\s{0,3}>\s?/gm, '')
+    // Collapse 3+ blank lines down to a single blank line
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export default function RAGChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -22,6 +41,7 @@ export default function RAGChat() {
   const [activeDocs, setActiveDocs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sends a chat query to the backend and appends the assistant's reply.
@@ -131,7 +151,16 @@ export default function RAGChat() {
 
   return (
     <>
-      <aside className="w-[280px] h-screen fixed left-0 top-0 bg-surface-dim border-r border-outline-variant flex flex-col p-gutter z-30 transition-transform duration-300 transform translate-x-0 md:translate-x-0">
+      {/* Mobile backdrop — visible only when the drawer is open on small screens. */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`w-[280px] h-screen fixed left-0 top-0 bg-surface-dim border-r border-outline-variant flex flex-col p-gutter z-50 transition-transform duration-300 transform md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-surface-variant border border-outline-variant overflow-hidden flex-shrink-0 flex items-center justify-center">
             <span className="material-symbols-outlined text-primary">robot_2</span>
@@ -140,6 +169,14 @@ export default function RAGChat() {
             <div className="font-headline-md text-headline-md font-bold text-primary">Intelligent RAG</div>
             <div className="font-label-sm text-label-sm text-on-surface-variant">LangChain Powered</div>
           </div>
+          {/* Close button — only on mobile. */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="ml-auto p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors md:hidden"
+            title="Close menu"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
         </div>
 
         <button className="w-full py-3 px-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-primary-fixed transition-colors shadow-[0_0_15px_rgba(77,142,255,0.15)] mb-8 active:scale-95 duration-150">
@@ -177,10 +214,20 @@ export default function RAGChat() {
         </div>
       </aside>
 
-      <main className="ml-[280px] flex-1 flex flex-col relative h-screen bg-background w-[calc(100%-280px)]">
+      <main className="md:ml-[280px] flex-1 flex flex-col relative h-screen bg-background w-full md:w-[calc(100%-280px)]">
         <header className="bg-surface/80 backdrop-blur-md flex justify-between items-center h-16 px-gutter border-b border-outline-variant sticky top-0 z-20 w-full">
-          <div className="font-headline-md text-headline-md font-extrabold text-primary hidden md:block">
-            RAG Assistant
+          <div className="flex items-center gap-3">
+            {/* Hamburger — opens the drawer on mobile. */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 -ml-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors md:hidden"
+              title="Open menu"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+            <div className="font-headline-md text-headline-md font-extrabold text-primary">
+              RAG Assistant
+            </div>
           </div>
           <nav className="flex items-center gap-6">
             <a href="#" className="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm cursor-pointer">Models</a>
@@ -189,7 +236,7 @@ export default function RAGChat() {
         </header>
 
         <div className="flex-1 overflow-y-auto w-full relative">
-          <div className="max-w-max-content-width mx-auto p-gutter pb-[180px] flex flex-col gap-8 pt-8">
+          <div className="max-w-max-content-width mx-auto px-4 md:px-gutter pb-[180px] flex flex-col gap-6 md:gap-8 pt-6 md:pt-8">
             <div className="flex flex-col items-center justify-center text-center mb-4">
               <h1 className="font-headline-xl text-headline-xl text-on-surface mb-4">Chat with your Documents</h1>
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-label-md text-label-md shadow-sm">
@@ -200,18 +247,18 @@ export default function RAGChat() {
 
             {messages.map(msg => (
               <div key={msg.id} className={`flex w-full justify-${msg.isUser ? 'end' : 'start'} max-w-4xl mx-auto`}>
-                <div className={`flex gap-4 w-full ${msg.isUser ? 'justify-end' : ''}`}>
+                <div className={`flex gap-2 md:gap-4 w-full ${msg.isUser ? 'justify-end' : ''}`}>
                   {!msg.isUser && (
                     <div className="w-8 h-8 rounded-lg bg-surface-container-highest border border-outline-variant flex items-center justify-center flex-shrink-0 mt-1">
                       <span className="material-symbols-outlined text-[18px] text-primary">smart_toy</span>
                     </div>
                   )}
-                  <div className={`border rounded-2xl p-5 font-body-md text-body-md shadow-sm ${
-                    msg.isUser 
-                      ? 'bg-primary text-on-primary rounded-tr-sm max-w-[85%] border-transparent' 
+                  <div className={`border rounded-2xl p-4 md:p-5 font-body-md text-body-md shadow-sm ${
+                    msg.isUser
+                      ? 'bg-primary text-on-primary rounded-tr-sm max-w-[85%] border-transparent'
                       : 'bg-surface-container-low border-outline-variant rounded-tl-sm text-on-surface w-full flex flex-col gap-4'
                   }`}>
-                    <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    <p className="leading-relaxed whitespace-pre-wrap">{msg.isUser ? msg.text : cleanMarkdown(msg.text)}</p>
                     
                     {msg.sources && (
                       <div className="flex flex-wrap gap-2 pt-2 border-t border-outline-variant/30">
@@ -249,7 +296,7 @@ export default function RAGChat() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 w-full bg-background/60 backdrop-blur-xl border-t border-outline-variant/30 px-gutter py-6 z-20">
+        <div className="absolute bottom-0 left-0 w-full bg-background/60 backdrop-blur-xl border-t border-outline-variant/30 px-4 md:px-gutter py-4 md:py-6 z-20">
           <div className="max-w-4xl mx-auto relative">
             {pendingFile && (
               <div className="mb-3 inline-flex items-center gap-2 max-w-full px-3 py-2 bg-surface-container-high border border-outline-variant rounded-xl font-label-md text-label-md text-on-surface shadow-sm">

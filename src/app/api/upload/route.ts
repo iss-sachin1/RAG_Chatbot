@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Error during upload processing:', error);
-    return NextResponse.json({ error: 'Failed to process document' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to process document';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

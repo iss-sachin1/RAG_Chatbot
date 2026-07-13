@@ -1,0 +1,20 @@
+# Convenience wrapper for running the app on a VPS.
+#   docker compose up -d --build
+# Secrets are read from a local .env file on the host (never committed).
+
+services:
+  web:
+    build: .
+    image: rag-chatbot:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    # Basic container health check hitting the app's homepage.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

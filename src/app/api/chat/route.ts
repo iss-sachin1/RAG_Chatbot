@@ -27,6 +27,10 @@ function getChatModel() {
     apiKey,
     model: process.env.NVIDIA_MODEL || 'minimaxai/minimax-m3',
     temperature: 0.2,
+    // NVIDIA's MiniMax-M3 endpoint returns an empty `choices: []` (HTTP 200)
+    // when no output-token cap is sent, which surfaces as "Failed to process
+    // chat query". An explicit maxTokens keeps responses non-empty.
+    maxTokens: 1024,
     configuration: {
       baseURL: process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1',
     },
@@ -61,6 +65,10 @@ export async function POST(req: NextRequest) {
       You are a helpful AI assistant. Answer the user's question based ONLY on the following context.
       If the answer is not in the context, say "I don't know based on the provided document."
 
+      Write your answer as clean, plain text. Do NOT use Markdown formatting:
+      no #, ##, or ### headings, no ** or * for bold/italics, no backticks. Use
+      simple hyphen bullets only when a list genuinely helps.
+
       Context:
       {context}
 
@@ -86,6 +94,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Chat API Error:', error);
-    return NextResponse.json({ error: 'Failed to process chat query' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to process chat query';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
